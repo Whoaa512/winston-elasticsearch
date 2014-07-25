@@ -1,6 +1,6 @@
 var util        = require('util')
 var winston     = require('winston');
-var elastical   =  require('elastical');
+var elasticsearch =  require('elasticsearch');
 var cluster     =  require('cluster');
 var _basename   = require('path').basename;
 var _dirname    = require('path').dirname;
@@ -36,18 +36,18 @@ var Elasticsearch = module.exports = winston.transports.Elasticsearch = function
 
   // Set client and bail if ready
   if( options.client ){
-    this.client = options.client;
-    return this;
+    if (options.client instanceof elasticsearch.Client) {
+      this.client = options.client;
+      return this;
+    } else {
+      throw new TypeError('Client option passed was not an instance of elasticsearch.Client.')
+    }
   }
 
-  // Create Elastical Client
-  this.client = new elastical.Client( options.host || 'localhost', {
-    port: options.port || 9200,
-    auth: options.auth || '',
-    protocol: options.protocol || 'http',
-    curlDebug: !!options.curlDebug,
-    basePath: options.basePath || '', // <- ?
-    timeout: options.timeout || 60000
+  // Create Elasticsearch Client
+  this.client = new elasticsearch.Client({
+    host: options.host || 'http://localhost:9200',
+    requestTimeout: options.requestTimeout
   });
 
   // Return for good measure.
